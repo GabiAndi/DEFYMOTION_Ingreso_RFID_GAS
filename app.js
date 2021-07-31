@@ -154,7 +154,7 @@ function doPost(request)
           
         }
 
-        addReturnData("UID=" + userUid + "&USER=" + userName + "&STATE=" + userState);
+        addReturnData("UID=" + userUid + "&USER=" + userName + "&STATE=" + userState + "&TIME=" + Utilities.formatDate(new Date(), timeZone, dateTimeFormat));
 
         // Se añade el registro a la hoja de calculo
         addLog(sheetLog, userUid, userName, userState);
@@ -269,3 +269,4 @@ function addLogTest()
   addLog(SpreadsheetApp.openById(sheetLogID).getSheets()[0], "0000", "Gabi", "ENTRADA");
 }
 /**************************************************************************************************/
+
