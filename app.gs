@@ -9,8 +9,7 @@ var returnData = "";
 // Emails de administrador a quien se enviaran los correos
 var emailAddressAdmin =
 [
-  "gabiandiagui@gmail.com",
-  "aguirreg@fcal.uner.edu.ar"
+  "sc@defymotion.com.ar"
 ];
 
 // Enumeraciones para los payload devueltos
@@ -21,7 +20,7 @@ var ERROR_EMPY_DATA = 3;
 var ERROR_USER_REGISTER = 4;
 
 // ID del documento donde se cargaran los registros
-var sheetLogID = "1JEPC1w76Qic3dsXdfpYwx_1uLJ_dH9mcUI79ldH1kqg";
+var sheetLogID = "1b-klqBIqHrq0kIzdpJkqarpVRVMSzc07d8NY7e-cNBM";
 
 // Función para enviar emails
 function sendEmails(email, issue, message)
@@ -141,7 +140,7 @@ function doPost(request)
         if (newUser)
         {
           // Valores por defecto
-          userName = "Nuevo usuario";
+          userName = "Nuevo";
           userState = "ENTRADA";
 
           addNewUser(sheetUserInfo, userUid, userName, userState);
