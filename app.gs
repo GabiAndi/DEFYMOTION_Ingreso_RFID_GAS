@@ -9,7 +9,8 @@ var returnData = "";
 // Emails de administrador a quien se enviaran los correos
 var emailAddressAdmin =
 [
-  "sc@defymotion.com.ar"
+  "sc@defymotion.com.ar",
+  "gabiandiagui@gmail.com"
 ];
 
 // Enumeraciones para los payload devueltos
@@ -21,6 +22,9 @@ var ERROR_USER_REGISTER = 4;
 
 // ID del documento donde se cargaran los registros
 var sheetLogID = "1b-klqBIqHrq0kIzdpJkqarpVRVMSzc07d8NY7e-cNBM";
+
+// Variable que guarda el estado del trigger check users entry
+var triggerCheckUsersEntryActive = false;
 
 // Función para enviar emails
 function sendEmails(email, issue, message)
@@ -98,6 +102,9 @@ function doPost(request)
 
       else
       {
+        // Se inicia la deteccion de accesos fuera de horario
+        activateTriggerCheckUsersEntry();
+
         // Se abre el documento actual (el que contiene información de los usuarios de las tarjetas)
         var sheetUserInfo = SpreadsheetApp.getActive().getActiveSheet();
         // Se abre el documento de destino (en donde se guardará los registros de ingreso)
@@ -359,6 +366,61 @@ function stripQuotes(value)
   return value.replace(/^["']|['"]$/g, "");
 }
 
+// Funcion que comprueba a la noche si alguien quedo conectado
+function activateTriggerCheckUsersEntry()
+{
+  if (!triggerCheckUsersEntryActive)
+  {
+    ScriptApp.newTrigger("checkUsersEntry")
+              .timeBased()
+              .atHour(21)
+              .everyDays(1)
+              .create();
+
+    triggerCheckUsersEntryActive = true;
+  }
+}
+
+// Funcion que desactiva la comprobación a la noche si alguien quedo conectado
+function deactivateTriggerCheckUsersEntry()
+{
+  if (triggerCheckUsersEntryActive)
+  {
+    ScriptApp.deleteTrigger("checkUsersEntry");
+  }
+}
+
+// Funcion que comprueba a la noche si alguien quedo conectado
+function checkUsersEntry()
+{
+  // Se abre el documento actual (el que contiene información de los usuarios de las tarjetas)
+  var sheetUserInfo = SpreadsheetApp.getActive().getActiveSheet();
+  // Se abre el documento de destino (en donde se guardará los registros de ingreso)
+  var sheetLog = SpreadsheetApp.openById(sheetLogID);
+
+  // Se extrae los datos de las personas registradas
+  var data = sheetUserInfo.getDataRange().getValues();
+
+  // Se verifica quien sigue activo
+  for (var i = 0 ; i < sheetUserInfo.getLastRow() ; i++)
+  {
+    if ("ENTRADA" == data[i][2])
+    {
+      // Se modifica el estado actual
+      var userName = data[i][0];
+      var userUid = data[i][1];
+      var userState = "SALIDA";
+
+      userChangeState(sheetUserInfo, i, userName, userUid, userState);
+
+      // Se envia mail de aviso
+      sendEmails(emailAddressAdmin, "Se marco la salida de un usuario", userName + " parece que se olvido de marcar que se fue.\r\nEl sistema lo fleto automáticamente.");
+
+      // Se añade el registro a la hoja de calculo
+      addLog(sheetLog, userUid, userName, userState);
+    }
+  }
+}
 /*************************************** Funciones de pueba ***************************************/
 // Prueba para addLog
 function addLogTest()
