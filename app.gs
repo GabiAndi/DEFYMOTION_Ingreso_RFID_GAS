@@ -23,9 +23,6 @@ var ERROR_USER_REGISTER = 4;
 // ID del documento donde se cargaran los registros
 var sheetLogID = "1b-klqBIqHrq0kIzdpJkqarpVRVMSzc07d8NY7e-cNBM";
 
-// Variable que guarda el estado del trigger check users entry
-var triggerCheckUsersEntryActive = false;
-
 // Función para enviar emails
 function sendEmails(email, issue, message)
 {
@@ -102,9 +99,6 @@ function doPost(request)
 
       else
       {
-        // Se inicia la deteccion de accesos fuera de horario
-        activateTriggerCheckUsersEntry();
-
         // Se abre el documento actual (el que contiene información de los usuarios de las tarjetas)
         var sheetUserInfo = SpreadsheetApp.getActive().getActiveSheet();
         // Se abre el documento de destino (en donde se guardará los registros de ingreso)
@@ -367,30 +361,6 @@ function stripQuotes(value)
 }
 
 // Funcion que comprueba a la noche si alguien quedo conectado
-function activateTriggerCheckUsersEntry()
-{
-  if (!triggerCheckUsersEntryActive)
-  {
-    ScriptApp.newTrigger("checkUsersEntry")
-              .timeBased()
-              .atHour(21)
-              .everyDays(1)
-              .create();
-
-    triggerCheckUsersEntryActive = true;
-  }
-}
-
-// Funcion que desactiva la comprobación a la noche si alguien quedo conectado
-function deactivateTriggerCheckUsersEntry()
-{
-  if (triggerCheckUsersEntryActive)
-  {
-    ScriptApp.deleteTrigger("checkUsersEntry");
-  }
-}
-
-// Funcion que comprueba a la noche si alguien quedo conectado
 function checkUsersEntry()
 {
   // Se abre el documento actual (el que contiene información de los usuarios de las tarjetas)
@@ -400,6 +370,9 @@ function checkUsersEntry()
 
   // Se extrae los datos de las personas registradas
   var data = sheetUserInfo.getDataRange().getValues();
+
+  // Se obtiene la fecha actual
+  var fecha = new Date();
 
   // Se verifica quien sigue activo
   for (var i = 0 ; i < sheetUserInfo.getLastRow() ; i++)
@@ -414,7 +387,8 @@ function checkUsersEntry()
       userChangeState(sheetUserInfo, i, userName, userUid, userState);
 
       // Se envia mail de aviso
-      sendEmails(emailAddressAdmin, "Se marco la salida de un usuario", userName + " parece que se olvido de marcar que se fue.\r\nEl sistema lo fleto automáticamente.");
+      sendEmails(emailAddressAdmin, "Se marco la salida de un usuario", "Parece que " + userName +
+                " se olvido de marcar la salida.\r\nEl sistema lo fleto automáticamente a las " + Utilities.formatDate(fecha, timeZone, dateTimeFormat) + ".");
 
       // Se añade el registro a la hoja de calculo
       addLog(sheetLog, userUid, userName, userState);
